@@ -1,0 +1,366 @@
+<head>
+    <meta charset="utf-8">
+
+
+<style type="text/css">
+
+
+body{
+  font-family: Arial;
+  color: #555;
+}
+.form{
+  background-color: #f1f1f1;
+  padding: 20px;
+}
+.form input[type="text"]{
+  padding: 10px;
+  box-shadow: inset 2px 2px 2px rgba(2,5,0,0.2);
+  border: none;
+}
+.button{
+  display: inline-block;
+  padding: 10px;
+  background: linear-gradient(#79a6e2 2%, #3366aa 5%, #1e4e8e);
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0px 3px 0px #113c75,
+              0px 5px 5px #333;
+  margin-right: 5px;
+}
+
+.button-backlog{
+  background: transparent;
+  box-shadow: none;
+  color: #3366aa;
+  font-weight: normal;
+}
+.button-progress{
+  background: transparent;
+  box-shadow: none;
+  color: #c06300;
+  font-weight: normal;
+}
+.button-done{
+  background: transparent;
+  box-shadow: none;
+  color: #007b03;
+  font-weight: normal;
+}
+.button-delete{
+  background: transparent;
+  box-shadow: none;
+  color: #be0000;
+  font-weight: normal;
+}
+.button-edit{
+  background: transparent;
+  box-shadow: none;
+  color: #8b00be;
+  font-weight: normal;
+}
+.form > h2{
+  margin-top: 0
+}
+.col-3rds{
+  box-sizing: border-box;
+  width:33.333%;
+  float:left;
+}
+.flex{
+  display: flex;
+  flex-direction: row;
+}
+.scrum-board{
+  flex: 1;
+  padding:20px;
+  border-right:1px solid #ddd;
+  border-bottom:1px solid #ddd;
+}
+.scrum-board:first-child{
+  flex: 1;
+  padding:20px;
+  border-left:1px solid #ddd;
+}
+.input-group{
+  position: relative;
+  display: block;
+  padding: 10px;
+  border: 1px solid #dddddd;
+  border-left: 5px solid #ccc;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background-color: #f1f1f1;
+}
+.input-group span{
+  color:#333;
+  font-weight: bold;
+}
+.inline{
+  display: inline;
+}
+.float-right{
+  float: right;
+}
+.overflow{
+  overflow: auto;
+}
+.margin-top-10{
+  margin-top: 10px;
+}
+
+
+</style>
+</head>
+<body>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+
+
+<div ng-app="ScrumApp">
+  <div>
+    <div class="form">
+      <h1>Test task</h1>
+
+      {% if user.is_authenticated %}
+        <h4>HI, {{ user }}</h4>
+        <a href="{% url 'users:logout' %}" class="button-delete"><h4>LOG OUT</h4></a>
+        <input type="text" placeholder="Type Task" id="task" />
+        <button class="button" id="add-button">Add Card</button>
+      {% else %}
+        <a href="{% url 'users:register' %}" class="button-progress"><h4>REGISTRATION</h4></a>
+        <a href="{% url 'users:login' %}" class="button-done"><h4>LOG IN</h4></a>
+
+
+
+      {% endif %}
+
+    </div>
+    {% if user.is_authenticated %}
+    <div class="flex">
+      <div class="scrum-board backlog">
+        <h2>To do</h2>
+        {% for topic_t in topics_t %}
+            <div class="input-group overflow">
+              <span>{{ topic_t }}</span>
+              <div class="margin-top-10" id="{{ topic_t.id }}">
+                 <button class="button button-backlog">To do</button><button class="button button-progress">In Progress</button><button class="button button-done">Done</button>
+                 <form action="{% url 'edit' id=topic_t.id %}" style="display: inline-block">
+                     <button class="button button-edit" type="submit">Edit</button>
+                 </form>
+                 <button class="button button-delete">Delete</button>
+              </div>
+            </div>
+        {% endfor %}
+      </div>
+      <div class="scrum-board in-progress">
+        <h2>In progress</h2>
+        {% for topic_i in topics_i %}
+            <div class="input-group overflow" style="background-color:#ffdfbc">
+              <span>{{ topic_i }}</span>
+              <div class="margin-top-10" id="{{ topic_i.id }}">
+                 <button class="button button-backlog">To do</button><button class="button button-progress">In Progress</button><button class="button button-done">Done</button>
+                 <form action="{% url 'edit' id=topic_i.id %}" style="display: inline-block">
+                     <button class="button button-edit" type="submit">Edit</button>
+                 </form>
+                 <button class="button button-delete">Delete</button>
+              </div>
+            </div>
+        {% endfor %}
+      </div>
+      <div class="scrum-board done">
+        <h2>Done</h2>
+        {% for topic_d in topics_d %}
+            <div class="input-group overflow" style="background-color:#cfffd0">
+              <span>{{ topic_d }}</span>
+              <div class="margin-top-10" id="{{ topic_d.id }}">
+                 <button class="button button-backlog">To do</button><button class="button button-progress">In Progress</button><button class="button button-done">Done</button>
+                 <form action="{% url 'edit' id=topic_d.id %}" style="display: inline-block">
+                     <button class="button button-edit" type="submit">Edit</button>
+                 </form>
+                 <button class="button button-delete">Delete</button>
+              </div>
+            </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+
+
+
+<script>
+    //Init
+init();
+
+//Button Functions------------------------------------------
+function init() {
+  $(".button-backlog").on("click", function() {
+    if (!($(this).closest(".backlog").length > 0)) {
+      var el = $(this).parents();
+      $.ajax(
+            {
+                type:"GET",
+                url:"/change_table",
+                data:{topic_id: el[0].id, topic_table: "T"
+                }
+            });
+      $(this).parents(".input-group").appendTo(".backlog").css({
+        "background-color": ""
+      });
+    }
+  });
+  $(".button-progress").on("click", function() {
+    if (!($(this).closest(".in-progress").length > 0)) {
+      var el = $(this).parents();
+      $.ajax(
+            {
+                type:"GET",
+                url:"/change_table",
+                data:{topic_id: el[0].id, topic_table: "I"
+                }
+            });
+      $(this).parents(".input-group").appendTo(".in-progress").css({
+        "background-color": "#ffdfbc"
+      });
+    }
+  });
+  $(".button-done").on("click", function() {
+    if (!($(this).closest(".done").length > 0)) {
+      var el = $(this).parents();
+      $.ajax(
+            {
+                type:"GET",
+                url:"/change_table",
+                data:{topic_id: el[0].id, topic_table: "D"
+                }
+            });
+      $(this).parents(".input-group").appendTo(".done").css({
+        "background-color": "#cfffd0"
+      });
+
+    }
+  });
+  $(".button-delete").on("click", function() {
+      var el = $(this).parents();
+      $.ajax(
+            {
+                type:"GET",
+                url:"/del_topic",
+                data:{topic_id: el[0].id
+                }
+            });
+    $(this).parents(".input-group").remove();
+  });
+
+  var placeholderDiv = document.createElement("div");
+  var placeholderAtt = document.createAttribute("class");
+  var taskDivAttVal = placeholderAtt.value = "placeholder";
+  placeholderDiv.setAttributeNode(placeholderAtt);
+
+}
+
+//Create Task------------------------------------------
+$("#add-button").on("click", function() {
+
+    if ($("#task").val() != ''){
+
+
+      $.ajax(
+            {
+                type:"GET",
+                url:"/add_topic",
+                data:{topic_text: $("#task").val()
+                },
+                success : function (data) {
+                  topic_id = data;
+
+                  var taskDiv = document.createElement("div");
+                  var taskSpan = document.createElement("span");
+                  var buttonsDiv = document.createElement("div");
+                  var buttonBacklog = document.createElement("button");
+                  var buttonProgress = document.createElement("button");
+                  var buttonDone = document.createElement("button");
+                  var buttonEdit = document.createElement("button");
+                  var buttonDelete = document.createElement("button");
+                  var formEdit = document.createElement("form");
+
+                  var taskDivAtt = document.createAttribute("class");
+                  var buttonsDivAtt = document.createAttribute("class");
+                  var buttonsDivId = document.createAttribute("id");
+                  var buttonBacklogAtt = document.createAttribute("class");
+                  var buttonProgressAtt = document.createAttribute("class");
+                  var buttonDoneAtt = document.createAttribute("class");
+                  var buttonEditAtt = document.createAttribute("class");
+                  var buttonEditType = document.createAttribute("type");
+                  var buttonDeleteAtt = document.createAttribute("class");
+                  var formEditAtt = document.createAttribute("style");
+                  var formEditAction = document.createAttribute("action");
+
+                  var taskDivAttVal = taskDivAtt.value = "input-group overflow";
+                  var buttonsDivAttVal = buttonsDivAtt.value = "margin-top-10";
+                  var buttonsDivIdVal = buttonsDivId.value = topic_id;
+                  var buttonBacklogAttVal = buttonBacklogAtt.value = "button button-backlog";
+                  var buttonProgressAttVal = buttonProgressAtt.value = "button button-progress";
+                  var buttonDoneAttVal = buttonDoneAtt.value = "button button-done";
+                  var buttonEditAttVal = buttonEditAtt.value = "button button-edit";
+                  var buttonEditTypeVal = buttonEditType.value = "submit";
+                  var buttonDeleteAttVal = buttonDeleteAtt.value = "button button-delete";
+                  var formEditAttVal = formEditAtt.value = "display: inline-block";
+                  var formEditActionVal = formEditAction.value = "/edit/" + topic_id + "/";
+
+                  taskDiv.setAttributeNode(taskDivAtt);
+                  buttonsDiv.setAttributeNode(buttonsDivAtt);
+                  buttonsDiv.setAttributeNode(buttonsDivId);
+                  buttonBacklog.setAttributeNode(buttonBacklogAtt);
+                  buttonProgress.setAttributeNode(buttonProgressAtt);
+                  buttonDone.setAttributeNode(buttonDoneAtt);
+                  buttonEdit.setAttributeNode(buttonEditType);
+                  buttonEdit.setAttributeNode(buttonEditAtt);
+                  buttonDelete.setAttributeNode(buttonDeleteAtt);
+                  formEdit.setAttributeNode(formEditAtt);
+                  formEdit.setAttributeNode(formEditAction);
+
+                  var taskText = document.createTextNode($("#task").val());
+                  var buttonBacklogText = document.createTextNode("To do");
+                  var buttonProgressText = document.createTextNode("In Progress");
+                  var buttonDoneText = document.createTextNode("Done");
+                  var buttonEditText = document.createTextNode("Edit");
+                  var buttonDeleteText = document.createTextNode("Delete");
+
+                  taskSpan.appendChild(taskText);
+                  taskDiv.appendChild(taskSpan);
+                  taskDiv.appendChild(buttonsDiv);
+                  buttonBacklog.appendChild(buttonBacklogText);
+                  buttonProgress.appendChild(buttonProgressText);
+                  buttonDone.appendChild(buttonDoneText);
+                  buttonEdit.appendChild(buttonEditText);
+                  buttonDelete.appendChild(buttonDeleteText);
+                  buttonsDiv.appendChild(buttonBacklog);
+                  buttonsDiv.appendChild(buttonProgress);
+                  buttonsDiv.appendChild(buttonDone);
+                  buttonsDiv.appendChild(formEdit);
+                  formEdit.appendChild(buttonEdit);
+                  buttonsDiv.appendChild(buttonDelete);
+
+
+                  $("input").val("");
+
+                  $('.backlog').append(taskDiv);
+
+                  init();
+                }
+            });
+    };
+});
+</script>
+
+
+</body>
+</html>
